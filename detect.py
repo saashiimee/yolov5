@@ -22,7 +22,7 @@ sys.path.append(FILE.parents[0].as_posix())  # add yolov5/ to path
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, colorstr, non_max_suppression, \
-    apply_classifier, scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path, save_one_box
+    apply_classifier, scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path, save_one_box, save_screenshot
 from utils.plots import colors, plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_sync
 
@@ -101,6 +101,7 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
     if pt and device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
+    next_frame = False
     for path, img, im0s, vid_cap in dataset:
         if pt:
             img = torch.from_numpy(img).to(device)
@@ -140,6 +141,11 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
+
+            if next_frame is not False:
+                save_screenshot(imc, file=save_dir / f'{p.stem}_nobird.jpg')
+                next_frame = False
+
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -162,7 +168,10 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         im0 = plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_width=line_thickness)
                         if c >= 1:
-                            playsound('birbgone.mp3')
+                            save_screenshot(imc, file=save_dir / f'{p.stem}_havebird.jpg')
+                            time.sleep(5)
+                            # playsound('birbgone.mp3')
+                            next_frame = True
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
@@ -217,7 +226,7 @@ def parse_opt():
     parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
     parser.add_argument('--save-crop', action='store_true', help='save cropped prediction boxes')
     parser.add_argument('--nosave', action='store_true', help='do not save images/videos')
-    parser.add_argument('--classes', default='15', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--classes', default=14, nargs='+', type=int, help='filter by class: --class 0, --class 0 2 3')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
     parser.add_argument('--visualize', action='store_true', help='visualize features')

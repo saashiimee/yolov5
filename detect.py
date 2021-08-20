@@ -9,6 +9,7 @@ Usage:
 import argparse
 import sys
 import time
+import datetime
 from pathlib import Path
 
 import cv2
@@ -142,8 +143,10 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
 
+            ts = time.time()
+            ss2 = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y_%H-%M-%S')
             if next_frame is not False:
-                save_screenshot(imc, file=save_dir / f'{p.stem}_nobird.jpg')
+                save_screenshot(imc, file=save_dir / f'{ss2}-{p.stem}-nobird.jpg')
                 next_frame = False
 
             if len(det):
@@ -168,9 +171,9 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         im0 = plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_width=line_thickness)
                         if c >= 1:
-                            save_screenshot(imc, file=save_dir / f'{p.stem}_havebird.jpg')
-                            time.sleep(5)
-                            # playsound('birbgone.mp3')
+                            ss1 = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y_%H-%M-%S')
+                            save_screenshot(imc, file=save_dir / f'{ss1}-{p.stem}-havebird.jpg')
+                            playsound('birbgone.mp3')
                             next_frame = True
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
@@ -215,7 +218,7 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
-    parser.add_argument('--source', type=str, default='data/images', help='file/dir/URL/glob, 0 for webcam')
+    parser.add_argument('--source', type=str, default='0', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')

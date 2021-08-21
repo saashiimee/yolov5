@@ -10,6 +10,7 @@ import argparse
 import sys
 import time
 import datetime
+import random
 from pathlib import Path
 
 import cv2
@@ -103,6 +104,8 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
     next_frame = False
+
+    sound_path = ['birbgone_1.mp3', 'birbgone_2.mp3', 'birbgone_3.mp3', 'birbgone_4.mp3', 'birbgone_5.mp3']
     for path, img, im0s, vid_cap in dataset:
         if pt:
             img = torch.from_numpy(img).to(device)
@@ -146,7 +149,7 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
             ts = time.time()
             ss2 = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y_%H-%M-%S')
             if next_frame is not False:
-                save_screenshot(imc, file=save_dir / f'{ss2}-{p.stem}-nobird.jpg')
+                save_screenshot(imc, file=save_dir / f'{ss2}_{rand_save}_{p.stem}_nobird.jpg')
                 next_frame = False
 
             if len(det):
@@ -172,8 +175,10 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
                         im0 = plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_width=line_thickness)
                         if c >= 1:
                             ss1 = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y_%H-%M-%S')
-                            save_screenshot(imc, file=save_dir / f'{ss1}-{p.stem}-havebird.jpg')
-                            playsound('birbgone.mp3')
+                            rand_sound = random.choice(sound_path)
+                            rand_save = rand_sound.split('.')[0]
+                            save_screenshot(imc, file=save_dir / f'{ss1}_{rand_save}_{p.stem}_havebird.jpg')
+                            playsound(rand_sound)
                             next_frame = True
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
